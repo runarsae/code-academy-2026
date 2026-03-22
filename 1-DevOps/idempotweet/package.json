@@ -1,0 +1,51 @@
+{
+  "name": "idempotweet",
+  "version": "0.1.1",
+  "private": true,
+  "scripts": {
+    "dev": "DATABASE_URL=${DATABASE_URL:-postgresql://codeacademy:codeacademy@localhost:5432/codeacademy} next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "seed": "DATABASE_URL=${DATABASE_URL:-postgresql://codeacademy:codeacademy@localhost:5432/codeacademy} tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.94.5",
+    "amqplib": "^0.10.9",
+    "date-fns": "^4.1.0",
+    "next": "^16.2.1",
+    "pg": "^8.20.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-intersection-observer": "^10.0.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/amqplib": "^0.10.8",
+    "@types/jsdom": "^28.0.1",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/ui": "^4.1.0",
+    "eslint": "^9",
+    "eslint-config-next": "^16.2.1",
+    "jsdom": "^29.0.1",
+    "msw": "^2.12.14",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  },
+  "packageManager": "yarn@4.12.0+sha512.f45ab632439a67f8bc759bf32ead036a1f413287b9042726b7cc4818b7b49e14e9423ba49b18f9e06ea4941c1ad062385b1d8760a8d5091a1a31e5f6219afca8"
+}
