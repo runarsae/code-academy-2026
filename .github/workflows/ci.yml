@@ -15,15 +15,15 @@ jobs:
         working-directory: 1-DevOps/idempotweet
     steps:
         - uses: actions/checkout@v6
-        
+
+        - run: corepack enable
+          working-directory: .
+
         - uses: actions/setup-node@v6
           with:
               node-version: '20'
               cache: 'yarn'
               cache-dependency-path: 1-DevOps/idempotweet/yarn.lock
-              
-        - run: corepack enable
-          working-directory: .
           
         - run: yarn install --immutable
           
