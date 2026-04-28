@@ -129,7 +129,7 @@ function generateDemoIdems(count: number = 200, seed: number = 42): Idem[] {
 // Database operations
 const CREATE_TABLE_SQL = `
 CREATE TABLE IF NOT EXISTS idems (
-  id VARCHAR(20) PRIMARY KEY,
+  id VARCHAR(50) PRIMARY KEY,
   author VARCHAR(50) NOT NULL,
   content VARCHAR(280) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
