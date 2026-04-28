@@ -1,0 +1,55 @@
+name: docker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '1-DevOps/idempotweet/**'
+      - '1-DevOps/2-Docker/**'
+      - '.github/workflows/docker.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    
+  docker-build-and-publish:
+    runs-on: ${{ vars.RUNNER || 'self-hosted' }}
+    needs: ci
+    permissions:
+      contents: read
+      packages: write
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Docker metadata
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-
+            
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: 1-DevOps/idempotweet
+          file: 1-DevOps/2-Docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
