@@ -6,11 +6,7 @@
 name: CI
 
 on:
-  pull_request:
-    paths:
-      - '1-DevOps/idempotweet/**'
-      - '.github/workflows/ci-solution.yml'
-  workflow_call:  # Allow other workflows to call this one
+  workflow_dispatch:
 
 jobs:
   build-and-test:

@@ -5,13 +5,16 @@
 
 name: Docker
 
+#on:
+#  push:
+#    branches: [main]
+#    paths:
+#      - '1-DevOps/idempotweet/**'
+#      - '1-DevOps/2-Docker/**'
+#      - '.github/workflows/docker.yml'
+#  workflow_dispatch:
+
 on:
-  push:
-    branches: [main]
-    paths:
-      - '1-DevOps/idempotweet/**'
-      - '1-DevOps/2-Docker/**'
-      - '.github/workflows/docker.yml'
   workflow_dispatch:
 
 env:
