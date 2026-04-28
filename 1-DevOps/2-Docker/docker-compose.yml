@@ -1,0 +1,41 @@
+services: 
+  app:
+    build:
+      context: ../../1-DevOps/idempotweet
+      dockerfile: ../2-Docker/Dockerfile
+      args:
+        - NEXT_PUBLIC_SHOW_SEEDED_IDEMS=true
+        - NEXT_PUBLIC_ENABLE_IDEM_FORM=true
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://codeacademy:codeacademy@postgres:5432/codeacademy
+      - NEXT_PUBLIC_SHOW_SEEDED_IDEMS=true
+      - NEXT_PUBLIC_ENABLE_IDEM_FORM=true
+    depends_on:
+      - postgres
+
+#  app:
+#    image: ghcr.io/${GITHUB_REPOSITORY}:latest
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - DATABASE_URL=postgresql://codeacademy:codeacademy@postgres:5432/codeacademy
+#      - NEXT_PUBLIC_SHOW_SEEDED_IDEMS=true
+#      - NEXT_PUBLIC_ENABLE_IDEM_FORM=true
+#    depends_on:
+#      - postgres
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=codeacademy
+      - POSTGRES_PASSWORD=codeacademy
+      - POSTGRES_DB=codeacademy
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
