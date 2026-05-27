@@ -19,42 +19,12 @@ Console.WriteLine("Connected to RabbitMQ");
 // - Handle incoming messages by deserializing the JSON and printing the content to the console
 
 /*
-#region DEFAULT EXCHANGE
-
-// Create a channel and declare the queue
-using var channel = await connection.CreateChannelAsync();
-await channel.QueueDeclareAsync(queue: "idem-events", durable: true, exclusive: false, autoDelete: false, arguments: null);
-
-// Set up a consumer to listen for messages
-var consumer = new AsyncEventingBasicConsumer(channel);
-
-// Handle received messages
-consumer.ReceivedAsync += async (sender, eventArgs) =>
-{
-    var body = eventArgs.Body.ToArray();
-    var message = JsonSerializer.Deserialize<JsonNode>(Encoding.UTF8.GetString(body));
-
-    Console.WriteLine($"Received message: {message}");
-
-    // Simulate processing time
-    await Task.Delay(1000);
-
-    // Acknowledge the message
-    await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);   
-};
-// Start consuming messages
-await channel.BasicConsumeAsync(queue: "idem-events", autoAck: false, consumerTag: "", noLocal: false, exclusive: false, arguments: null, consumer: consumer);
-
-#endregion
-*/
-
-/*
 #region FANOUT EXCHANGE
 
 // Create a channel and declare the queue
 using var channel = await connection.CreateChannelAsync();
-await channel.QueueDeclareAsync(queue: "fanout-queue-1", durable: true, exclusive: false, autoDelete: false, arguments: null);
-await channel.QueueBindAsync(queue: "fanout-queue-1", exchange: "fanout-exchange", routingKey: string.Empty);
+await channel.QueueDeclareAsync(queue: "fanout-queue-2", durable: true, exclusive: false, autoDelete: true, arguments: null);
+await channel.QueueBindAsync(queue: "fanout-queue-2", exchange: "fanout-exchange", routingKey: string.Empty);
 
 // Set up a consumer to listen for messages
 var consumer = new AsyncEventingBasicConsumer(channel);
@@ -74,7 +44,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
     await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);   
 };
 // Start consuming messages
-await channel.BasicConsumeAsync(queue: "fanout-queue-1", autoAck: false, consumerTag: "", noLocal: false, exclusive: false, arguments: null, consumer: consumer);
+await channel.BasicConsumeAsync(queue: "fanout-queue-2", autoAck: false, consumerTag: "", noLocal: false, exclusive: false, arguments: null, consumer: consumer);
 
 #endregion
 */
@@ -84,8 +54,8 @@ await channel.BasicConsumeAsync(queue: "fanout-queue-1", autoAck: false, consume
 
 // Create a channel and declare the queue
 using var channel = await connection.CreateChannelAsync();
-await channel.QueueDeclareAsync(queue: "direct-queue-1", durable: true, exclusive: false, autoDelete: false, arguments: null);
-await channel.QueueBindAsync(queue: "direct-queue-1", exchange: "direct-exchange", routingKey: "RK1");
+await channel.QueueDeclareAsync(queue: "direct-queue-2", durable: true, exclusive: false, autoDelete: false, arguments: null);
+await channel.QueueBindAsync(queue: "direct-queue-2", exchange: "direct-exchange", routingKey: "RK2");
 
 // Set up a consumer to listen for messages
 var consumer = new AsyncEventingBasicConsumer(channel);
@@ -105,7 +75,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
     await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);   
 };
 // Start consuming messages
-await channel.BasicConsumeAsync(queue: "direct-queue-1", autoAck: false, consumerTag: "", noLocal: false, exclusive: false, arguments: null, consumer: consumer);
+await channel.BasicConsumeAsync(queue: "direct-queue-2", autoAck: false, consumerTag: "", noLocal: false, exclusive: false, arguments: null, consumer: consumer);
 
 #endregion
 */
