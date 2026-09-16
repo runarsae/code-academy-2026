@@ -31,7 +31,7 @@ export const ORDERS_QUERY_KEY = ["orders"] as const;
  * At det er én linje er ikke tilfeldig: for resten av appen er en hendelse en
  * hendelse. Hvor den kom fra er BFF-ens problem, ikke UI-ets.
  */
-const EVENTS_URL = "/api/events/demo";
+const EVENTS_URL = "/api/events";
 
 async function fetchOrdersFromBff(): Promise<Order[]> {
   const response = await fetch("/api/orders", { cache: "no-store" });
@@ -64,7 +64,13 @@ export function useUpdateStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
+    mutationFn: async ({
+      orderId,
+      status,
+    }: {
+      orderId: string;
+      status: OrderStatus;
+    }) => {
       const response = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
@@ -76,6 +82,7 @@ export function useUpdateStatus() {
     // Vi henter på nytt med én gang i stedet for å vente på at hendelsen skal
     // komme tilbake via RabbitMQ. Da føles knappen umiddelbar selv om broker
     // er treg — eller nede.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY }),
   });
 }

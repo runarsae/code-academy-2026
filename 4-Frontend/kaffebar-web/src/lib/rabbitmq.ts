@@ -48,8 +48,14 @@ function getConnection(): Promise<ChannelModel> {
     .connect(RABBITMQ_URL)
     .then((connection) => {
       // Dør forbindelsen, skal neste kall lage en ny — ikke gjenbruke en død.
-      connection.on("close", () => void (globalForAmqp.__kaffebarConnection = undefined));
-      connection.on("error", () => void (globalForAmqp.__kaffebarConnection = undefined));
+      connection.on(
+        "close",
+        () => void (globalForAmqp.__kaffebarConnection = undefined),
+      );
+      connection.on(
+        "error",
+        () => void (globalForAmqp.__kaffebarConnection = undefined),
+      );
       return connection;
     })
     .catch((error: unknown) => {
@@ -87,8 +93,6 @@ export async function subscribeToOrders(
   });
   channel.on("close", () => onClosed?.());
 
-  let consumerTag: string | undefined;
-
   // ---------------------------------------------------------------------------
   // TODO (runde 2). Fire kall, i denne rekkefølgen, alle på `channel`:
   //
@@ -122,8 +126,25 @@ export async function subscribeToOrders(
   // ikke er løst. Uten den ville route handleren meldt «klar» til nettleseren selv
   // om ingen hendelser kunne komme, og indikatoren hadde stått på «Live» og løyet.
   // Den forsvinner av seg selv når du setter `consumerTag` i consume-kallet.
-  void RABBITMQ_EXCHANGE;
-  void onEvent;
+
+  await channel.assertExchange(RABBITMQ_EXCHANGE, "topic", {});
+
+  const queue = await channel.assertQueue("", {
+    exclusive: true,
+    autoDelete: true,
+  });
+
+  await channel.bindQueue(queue.queue, RABBITMQ_EXCHANGE, "order.#");
+
+  const { consumerTag } = await channel.consume(
+    queue.queue,
+    (message) => {
+      if (message !== null) {
+        onEvent(JSON.parse(message.content.toString()));
+      }
+    },
+    { noAck: true },
+  );
 
   if (!consumerTag) {
     await channel.close();
