@@ -3,7 +3,8 @@
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEventSource } from "./useEventSource";
-import type { Order, OrderStatus } from "@/types/domain";
+import { parseKaffebarEvent } from "@/lib/orders";
+import type { KaffebarEvent, Order, OrderStatus } from "@/types/domain";
 
 /**
  * Ordrelista, holdt fersk.
@@ -39,7 +40,10 @@ async function fetchOrdersFromBff(): Promise<Order[]> {
   return response.json();
 }
 
-export function useOrders(initialOrders: Order[]) {
+export function useOrders(
+  initialOrders: Order[],
+  onOrderEvent?: (event: KaffebarEvent) => void,
+) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -51,9 +55,14 @@ export function useOrders(initialOrders: Order[]) {
     staleTime: 1000,
   });
 
-  const onEvent = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
-  }, [queryClient]);
+  const onEvent = useCallback(
+    (message: MessageEvent) => {
+      void queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+      const event = parseKaffebarEvent(message.data);
+      if (event) onOrderEvent?.(event);
+    },
+    [queryClient, onOrderEvent],
+  );
 
   const connection = useEventSource(EVENTS_URL, onEvent);
 

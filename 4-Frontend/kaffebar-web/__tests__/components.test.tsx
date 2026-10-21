@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BaristaBoard, ALERT_DURATION_MS } from "@/components/BaristaBoard";
+import { NewOrderAlert } from "@/components/NewOrderAlert";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StatusColumn } from "@/components/StatusColumn";
 import { nextStatus } from "@/components/OrderCard";
@@ -54,5 +57,75 @@ describe("formatering", () => {
 
   it("sier «nå» om noe som skjedde nettopp", () => {
     expect(timeAgo(new Date().toISOString())).toBe("nå");
+  });
+});
+
+describe("NewOrderAlert", () => {
+  it("viser kunde og kaffe, og lukkeknappen kaller onDismiss", () => {
+    const onDismiss = vi.fn();
+    render(<NewOrderAlert order={order} onDismiss={onDismiss} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Kaffe Latte");
+    expect(screen.getByRole("status")).toHaveTextContent("Ada");
+    fireEvent.click(screen.getByRole("button", { name: "Lukk varsel" }));
+    expect(onDismiss).toHaveBeenCalled();
+  });
+});
+
+describe("BaristaBoard", () => {
+  class FakeEventSource {
+    static instance: FakeEventSource;
+    listeners = new Map<string, (e: MessageEvent) => void>();
+    constructor() {
+      FakeEventSource.instance = this;
+    }
+    addEventListener(type: string, fn: (e: MessageEvent) => void) {
+      this.listeners.set(type, fn);
+    }
+    close() {}
+  }
+
+  it("viser varsel ved ny ordre og fjerner det etter fast tid", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("EventSource", FakeEventSource);
+    const client = new QueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <BaristaBoard initialOrders={[]} />
+      </QueryClientProvider>,
+    );
+    const send = (
+      type: string,
+      data: Order,
+      timestamp: string,
+      previousStatus?: string,
+    ) =>
+      FakeEventSource.instance.listeners.get(type)?.({
+        data: JSON.stringify({ type, timestamp, data, previousStatus }),
+      } as MessageEvent);
+    act(() => {
+      send("order.created", order, "t1");
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Ny bestilling");
+    act(() => {
+      send("order.created", order, "t1");
+    });
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    act(() => {
+      vi.advanceTimersByTime(ALERT_DURATION_MS);
+    });
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    // Redelivery av samme hendelse etter lukking gir ikke nytt varsel
+    act(() => {
+      send("order.created", order, "t1");
+    });
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    // Ny overgang tilbake til PENDING er en ny hendelse
+    act(() => {
+      send("order.status-changed", order, "t2", "READY");
+    });
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });

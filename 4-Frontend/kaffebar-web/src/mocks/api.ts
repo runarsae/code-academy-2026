@@ -1,6 +1,6 @@
 import type { Coffee, CreateOrderRequest, Order, OrderStatus } from "@/types/domain";
 import { emitMockOrderCreated, emitMockStatusChanged } from "./events";
-import { createMockOrder, listMockOrders, MOCK_MENU, setMockStatus } from "./store";
+import { createMockOrder, deleteMockOrder, listMockOrders, MOCK_MENU, setMockStatus } from "./store";
 
 /**
  * Mock-modus: de samme fire operasjonene som `src/lib/api.ts`, men mot
@@ -52,4 +52,10 @@ export function mockUpdateOrderStatus(orderId: string, status: OrderStatus): Ord
   }
 
   return result.order;
+}
+
+export function mockDeleteOrder(orderId: string): void {
+  if (!deleteMockOrder(orderId)) {
+    throw new Error(`Fant ingen bestilling med id ${orderId}.`);
+  }
 }
