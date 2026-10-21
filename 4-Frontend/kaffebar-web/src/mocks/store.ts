@@ -129,3 +129,7 @@ export function oldestMockWithStatus(status: OrderStatus): Order | undefined {
     .filter((order) => order.status === status)
     .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))[0];
 }
+
+export function deleteMockOrder(orderId: string): boolean {
+  return orders.delete(orderId);
+}

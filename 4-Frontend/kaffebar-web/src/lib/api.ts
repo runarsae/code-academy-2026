@@ -104,3 +104,14 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
   });
   return handle<Order>(response);
 }
+
+/** DELETE /orders/{orderId} */
+export async function deleteOrder(orderId: string): Promise<void> {
+  if (USE_MOCK_API) return (await import("@/mocks/api")).mockDeleteOrder(orderId);
+
+  const response = await fetch(`${KAFFEBAR_API_URL}/orders/${orderId}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+  if (!response.ok) await handle<never>(response);
+}
