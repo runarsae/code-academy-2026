@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { deleteOrder, updateOrderStatus } from "@/lib/api";
+import { isOrderStatus } from "@/lib/orders";
 import type { OrderStatus } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,15 @@ export async function PATCH(
   context: { params: Promise<{ orderId: string }> },
 ) {
   const { orderId } = await context.params;
-  const { status } = (await request.json()) as { status: OrderStatus };
+  const body = (await request.json().catch(() => null)) as { status?: unknown } | null;
+
+  if (!isOrderStatus(body?.status)) {
+    return NextResponse.json(
+      { message: "Ugyldig status. Må være PENDING, BREWING eller READY." },
+      { status: 400 },
+    );
+  }
+  const status: OrderStatus = body.status;
 
   try {
     return NextResponse.json(await updateOrderStatus(orderId, status));

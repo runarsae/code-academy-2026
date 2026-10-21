@@ -1,10 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StatusColumn } from "./StatusColumn";
 import { LiveIndicator } from "./LiveIndicator";
+import { NewOrderAlert } from "./NewOrderAlert";
+import { isNewQueuedOrder } from "@/lib/orders";
 import { useOrders, useUpdateStatus } from "@/hooks/useOrders";
-import { STATUS_ORDER, type Order, type OrderStatus } from "@/types/domain";
+import {
+  STATUS_ORDER,
+  type KaffebarEvent,
+  type Order,
+  type OrderStatus,
+} from "@/types/domain";
 
 /**
  * Baristaskjermen. Utlevert.
@@ -13,8 +20,49 @@ import { STATUS_ORDER, type Order, type OrderStatus } from "@/types/domain";
  * tilstand for ordrene. Den leser fra TanStack Query, og `useOrders` invaliderer
  * cachen når det kommer en hendelse over SSE. Ingen polling, ingen manuell synk.
  */
+export const ALERT_DURATION_MS = 5000;
+
 export function BaristaBoard({ initialOrders }: { initialOrders: Order[] }) {
-  const { data: orders = [], connection } = useOrders(initialOrders);
+  const [alerts, setAlerts] = useState<Order[]>([]);
+  // Hendelser vi allerede har varslet om, så redelivery ikke gir nytt varsel
+  const seenEvents = useRef(new Set<string>());
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+
+  const dismissAlert = useCallback((orderId: string) => {
+    clearTimeout(timers.current.get(orderId));
+    timers.current.delete(orderId);
+    setAlerts((current) => current.filter((a) => a.orderId !== orderId));
+  }, []);
+
+  const onOrderEvent = useCallback(
+    (event: KaffebarEvent) => {
+      if (!isNewQueuedOrder(event)) return;
+      const order = event.data;
+      const eventKey = `${event.type}:${event.timestamp}:${order.orderId}`;
+      if (seenEvents.current.has(eventKey)) return;
+      seenEvents.current.add(eventKey);
+      setAlerts((current) => [
+        ...current.filter((a) => a.orderId !== order.orderId),
+        order,
+      ]);
+      clearTimeout(timers.current.get(order.orderId));
+      timers.current.set(
+        order.orderId,
+        setTimeout(() => dismissAlert(order.orderId), ALERT_DURATION_MS),
+      );
+    },
+    [dismissAlert],
+  );
+
+  useEffect(() => {
+    const active = timers.current;
+    return () => active.forEach(clearTimeout);
+  }, []);
+
+  const { data: orders = [], connection } = useOrders(
+    initialOrders,
+    onOrderEvent,
+  );
   const updateStatus = useUpdateStatus();
   const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
 
@@ -34,6 +82,18 @@ export function BaristaBoard({ initialOrders }: { initialOrders: Order[] }) {
         </p>
         <LiveIndicator state={connection} />
       </div>
+
+      {alerts.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {alerts.map((order) => (
+            <NewOrderAlert
+              key={order.orderId}
+              order={order}
+              onDismiss={() => dismissAlert(order.orderId)}
+            />
+          ))}
+        </div>
+      )}
 
       {connection === "closed" && (
         <p className="rounded-lg border border-line bg-accent-soft px-3 py-2 text-sm text-secondary">

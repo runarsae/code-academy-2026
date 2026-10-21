@@ -30,17 +30,11 @@ There is no lint step for .NET.
 **Libraries and helpers — use these**
 - .NET errors: build every error response with `ProblemFactory` (`Kaffebar/Errors/ProblemFactory.cs`) and return it via `.AsResult()` (`application/problem+json`). Never hand-write error JSON.
 - .NET DTOs: use `record` types, with separate request and response types.
-- .NET API tests: use `WebApplicationFactory<Program>` over HTTP (see `KaffebarApiTests`); don't call controller methods directly.
 - .NET RabbitMQ connection: use `ConnectionHelper.ConnectAsync()` from `Common`; config via `RabbitMQ:URI` / `RabbitMQ__URI`.
-- Frontend data fetching: use TanStack Query (`@tanstack/react-query`). Don't fetch in `useEffect`.
-- Frontend API types: generate with `yarn generate:types`.
-- Frontend tests: Vitest.
 
 **Forbidden**
-- Don't edit `src/types/kaffebar.ts` by hand; regenerate it.
-- Don't store tokens in `localStorage`; the BFF holds them server-side.
 - Don't remove the Minimal API `GET /menu` next to `OrdersController`; the mix is intentional.
 - Don't edit `*-solution` files (e.g. `Dockerfile-solution`, `useEventSource-solution.ts`, `ci-solution.yml`) when working on the matching starter, and don't copy solution code into starters unless asked.
 - Don't commit `.env` or secrets.
-- Don't add a second styling system to the web app.
-- Don't use Next.js APIs from memory: this version has breaking changes. Read `node_modules/next/dist/docs/` first (`4-Frontend/kaffebar-web/AGENTS.md`).
+
+Path-specific rules live in `.github/instructions/` (`frontend.instructions.md`, `tester.instructions.md`).
